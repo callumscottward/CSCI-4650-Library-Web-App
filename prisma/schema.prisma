@@ -11,19 +11,76 @@ datasource db {
   //   mysql://USER:PASSWORD@HOST:PORT/DATABASE
 }
 
-model User {
-  id      Int     @id @default(autoincrement())
-  email   String  @unique
-  name    String?
-  address String?
-  posts   Post[]
+model Author {
+	id      		Int     @id @default(autoincrement())
+	firstName   	String
+	lastName    	String
+	bio 			String?
+	books 			Book[]
 }
 
-model Post {
-  id        Int     @id @default(autoincrement())
-  title     String
-  content   String?
-  published Boolean @default(false)
-  author    User    @relation(fields: [authorId], references: [id])
-  authorId  Int
+model Book {
+	id        		Int     	@id @default(autoincrement())
+	ISBN			String		@unique
+	title     		String
+	synopsis  		String?
+	length    		Int?
+	duration		Int?
+	genre	 		Genre
+	author    	 	Author    	@relation(fields: [authorId], references: [id])
+	authorId  	 	Int
+	physicalBooks  	PhysicalBookCopy[]
+	audioBooks	 	AudioBookCopy[]
+	bookReviews	 	BookReview[]
 }
+
+model PhysicalBookCopy {
+	id				Int     @id @default(autoincrement())
+	checkedOut		Boolean
+	book			Book	@relation(fields: [bookId], references: [id])
+	bookId			Int
+}
+
+model AudioBookCopy {
+	id				Int     @id @default(autoincrement())
+	checkedOut		Boolean
+	book			Book	@relation(fields: [bookId], references: [id])
+	bookId			Int
+}
+
+
+model BookReview {
+	id				Int     @id @default(autoincrement())
+	reviewerName	String
+	desc			String
+	rating			Int		// 1-5
+	book			Book	@relation(fields: [bookId], references: [id])
+	bookId			Int
+}
+
+enum Genre {
+  FICTION
+  NONFICTION
+  SCIFI
+  FANTASY
+  MYSTERY
+  BIOGRAPHY
+}
+
+
+// model User {
+//   id      Int     @id @default(autoincrement())
+//   email   String  @unique
+//   name    String?
+//   address String?
+//   posts   Post[]
+// }
+
+// model Post {
+//   id        Int     @id @default(autoincrement())
+//   title     String
+//   content   String?
+//   published Boolean @default(false)
+//   author    User    @relation(fields: [authorId], references: [id])
+//   authorId  Int
+// }
