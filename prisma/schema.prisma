@@ -50,7 +50,7 @@ model AudioBookCopy {
 model BookReview {
 	id				Int     @id @default(autoincrement())
 	reviewerName	String
-	desc			String	@db.Text
+	review			String	@db.Text
 	rating			Int		// 1-5
 	book			Book	@relation(fields: [bookId], references: [id])
 	bookId			Int
