@@ -2,12 +2,12 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output = "./generated"
 }
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
   //   mysql://USER:PASSWORD@HOST:PORT/DATABASE
 }
 
@@ -50,7 +50,7 @@ model AudioBookCopy {
 model BookReview {
 	id				Int     @id @default(autoincrement())
 	reviewerName	String
-	review			String	@db.Text
+	review			String	// @db.Text
 	rating			Int		// 1-5
 	book			Book	@relation(fields: [bookId], references: [id])
 	bookId			Int
