@@ -1,15 +1,19 @@
-This is a demo project written in NextJS. It uses prisma for ORM (which means connects to database)
+This is a library management and access software created by 
+- Justin Bartels
+- Blake Britton
+- Drew Scebold
+- Callum Ward
 
-# Run on your local machine
+# How to Run the Program on your Local Machine
 
-- Step 1, clone this project to your local machine and within the project root folder 
-  install dependencies
+- Step 1: Clone this project to your local machine and within the project root folder and install dependencies using
 ```bash
-npm i
+npm install
 ```
-- Step 2, setup database of sqlite (which is just an in 
+
+- Step 2: Setup database of sqlite (which is just an in 
 memory database only for the ease of testing)
-    - make sure the prisma/schema.prisma file has this
+    - Make sure the prisma/schema.prisma file has this
   ```c
     datasource db {
       provider = "sqlite" 
@@ -18,14 +22,29 @@ memory database only for the ease of testing)
   ```
     - Then Run a migration to create your database tables with Prisma Migrate
     ```bash
-    npx prisma migrate dev --name init
+    npx prisma migrate dev
     ```
-- Step 3, run dev server to serve the NextJS web app
+    - Alternatively, you might need to run a reset if you already have outdated migration info.
+    ```bash
+    npx prisma migrate reset
+    ```
+  
+- Step 3, Generate important prisma client info using the following command (I'm not 100% sure what this does, but I'm pretty sure it's necessary)
+```bash
+npx prisma generate
+```
+
+- (Optional) Step 4, If you'd like to use the mock data in `prisma/seed.ts`, use the following command
+```bash
+npx prisma db seed
+```
+
+- Step 5, run dev server to serve the NextJS web app
     ```bash
     npm run dev
     ```
 
-# Run on aws ec2 with a mysql RDS
+# How to Run the Program on AWS EC2 with a MySQL RDS
 
 - Step 0, fire up ec2 and mysql rds, set up correctly with their security rules
     > By default, nextjs dev server run on port 3000 of http, so allow it's request
@@ -50,6 +69,10 @@ npm i
     ```bash
     npx prisma migrate dev --name init
     ```
+
+    - There might be additional things to do here!
+
+
 - Step 3, run dev server to serve the NextJS web app
     ```bash
     npm run dev

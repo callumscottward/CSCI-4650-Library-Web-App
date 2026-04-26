@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+  //   mysql://USER:PASSWORD@HOST:PORT/DATABASE
+}
+
+model Author {
+  id        Int    @id @default(autoincrement())
+  firstName String
+  lastName  String
+  books     Book[]
+}
+
+model Book {
+  id            Int                @id @default(autoincrement())
+  ISBN          String             @unique
+  title         String
+  pageLength    Int?
+  duration      Int?
+  genre         Genre
+  author        Author             @relation(fields: [authorId], references: [id])
+  authorId      Int
+  physicalBooks PhysicalBookCopy[]
+  audioBooks    AudioBookCopy[]
+  bookReviews   BookReview[]
+}
+
+model PhysicalBookCopy {
+  id         Int     @id @default(autoincrement())
+  checkedOut Boolean
+  book       Book    @relation(fields: [bookId], references: [id])
+  bookId     Int
+}
+
+model AudioBookCopy {
+  id         Int     @id @default(autoincrement())
+  checkedOut Boolean
+  book       Book    @relation(fields: [bookId], references: [id])
+  bookId     Int
+}
+
+model BookReview {
+  id           Int    @id @default(autoincrement())
+  reviewerName String
+  review       String // @db.Text
+  rating       Int // 1-5
+  book         Book   @relation(fields: [bookId], references: [id])
+  bookId       Int
+}
+
+enum Genre {
+  FICTION
+  NONFICTION
+  SCIFI
+  FANTASY
+  MYSTERY
+  BIOGRAPHY
+}
+
+// model User {
+//   id      Int     @id @default(autoincrement())
+//   email   String  @unique
+//   name    String?
+//   address String?
+//   posts   Post[]
+// }
+
+// model Post {
+//   id        Int     @id @default(autoincrement())
+//   title     String
+//   content   String?
+//   published Boolean @default(false)
+//   author    User    @relation(fields: [authorId], references: [id])
+//   authorId  Int
+// }

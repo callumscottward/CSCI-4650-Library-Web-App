@@ -1,10 +1,52 @@
 import Link from "next/link";
-import { Card, Typography, Button, Row, Col } from "antd";
-import { UserOutlined, HomeOutlined } from "@ant-design/icons";
+import { useMemo, useState } from "react";
+import type { GetServerSideProps } from "next";
+import {
+  Card,
+  Typography,
+  Button,
+  Row,
+  Col,
+  Input,
+  Tag,
+  Modal,
+  List,
+} from "antd";
+import {
+  HomeOutlined,
+  SearchOutlined,
+  UserOutlined,
+  BookOutlined,
+} from "@ant-design/icons";
+import type { Author, Book } from "@prisma/client";
+import prisma from "@/model/db";
 
-const { Title, Paragraph } = Typography;
+const { Title, Paragraph, Text } = Typography;
 
-export default function AuthorsPage() {
+type AuthorWithBooks = Author & {
+  books: Book[];
+};
+
+type AuthorsPageProps = {
+  authors: AuthorWithBooks[];
+};
+
+export default function AuthorsPage({ authors }: AuthorsPageProps) {
+  const [search, setSearch] = useState("");
+  const [selectedAuthor, setSelectedAuthor] = useState<AuthorWithBooks | null>(
+    null
+  );
+
+  const filteredAuthors = useMemo(() => {
+    return authors.filter((author) => {
+      const bookTitles = author.books.map((book) => book.title).join(" ");
+      const searchText =
+        `${author.firstName} ${author.lastName} ${bookTitles}`.toLowerCase();
+
+      return searchText.includes(search.toLowerCase());
+    });
+  }, [authors, search]);
+
   return (
     <main style={{ minHeight: "100vh", padding: "48px", background: "#f5efe6" }}>
       <Link href="/">
@@ -15,29 +57,100 @@ export default function AuthorsPage() {
         <UserOutlined /> Authors
       </Title>
 
-      <Paragraph>
-        Manage author records and connect them to books in the library catalog.
-      </Paragraph>
+      <Paragraph>Browse authors and click a card to view their books.</Paragraph>
+
+      <Card style={{ borderRadius: "18px", marginBottom: "24px" }}>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} md={18}>
+            <Input
+              size="large"
+              prefix={<SearchOutlined />}
+              placeholder="Search authors or books..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </Col>
+
+          <Col xs={24} md={6}>
+            <Button size="large" block onClick={() => setSearch("")}>
+              Clear Search
+            </Button>
+          </Col>
+        </Row>
+      </Card>
 
       <Row gutter={[24, 24]}>
-        <Col xs={24} md={8}>
-          <Card title="Author Profiles" hoverable>
-            Store names, biographies, and related book records.
-          </Card>
-        </Col>
+        {filteredAuthors.map((author) => (
+          <Col xs={24} md={12} lg={8} key={author.id}>
+            <Card
+              hoverable
+              style={{ borderRadius: "18px" }}
+              onClick={() => setSelectedAuthor(author)}
+            >
+              <Tag color="brown">
+                {author.books.length}{" "}
+                {author.books.length === 1 ? "Book" : "Books"}
+              </Tag>
 
-        <Col xs={24} md={8}>
-          <Card title="Book Connections" hoverable>
-            See which authors are connected to which books.
-          </Card>
-        </Col>
+              <Title level={4}>
+                {author.firstName} {author.lastName}
+              </Title>
 
-        <Col xs={24} md={8}>
-          <Card title="Library Records" hoverable>
-            Keep author data organized across the system.
-          </Card>
-        </Col>
+              <Text type="secondary">Click to view books</Text>
+            </Card>
+          </Col>
+        ))}
       </Row>
+
+      <Modal
+        open={selectedAuthor !== null}
+        onCancel={() => setSelectedAuthor(null)}
+        footer={null}
+        title={
+          selectedAuthor
+            ? `${selectedAuthor.firstName} ${selectedAuthor.lastName}'s Books`
+            : "Author Books"
+        }
+      >
+        {selectedAuthor?.books.length ? (
+          <List
+            dataSource={selectedAuthor.books}
+            renderItem={(book) => (
+              <List.Item>
+                <List.Item.Meta
+                  avatar={<BookOutlined />}
+                  title={book.title}
+                  description={
+                    <>
+                      <Text type="secondary">ISBN: {book.ISBN}</Text>
+                      <br />
+                      <Tag color="brown">{book.genre}</Tag>
+                    </>
+                  }
+                />
+              </List.Item>
+            )}
+          />
+        ) : (
+          <Paragraph>No books found for this author.</Paragraph>
+        )}
+      </Modal>
     </main>
   );
 }
+
+export const getServerSideProps: GetServerSideProps<
+  AuthorsPageProps
+> = async () => {
+  const authors = await prisma.author.findMany({
+    include: {
+      books: true,
+    },
+  });
+
+  return {
+    props: {
+      authors,
+    },
+  };
+};
