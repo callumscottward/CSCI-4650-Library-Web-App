@@ -9,8 +9,10 @@ import {
   Col,
   Input,
   Select,
-  Tag,
   Rate,
+  Form,
+  message,
+  Modal,
 } from "antd";
 import {
   HomeOutlined,
@@ -30,6 +32,8 @@ type ReviewsPageProps = {
 export default function ReviewsPage({ reviews, books }: ReviewsPageProps) {
   const [search, setSearch] = useState("");
   const [rating, setRating] = useState("ALL");
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [form] = Form.useForm();
 
   const bookMap = useMemo(
     () => new Map(books.map((book) => [book.id, book.title])),
@@ -50,15 +54,54 @@ export default function ReviewsPage({ reviews, books }: ReviewsPageProps) {
     });
   }, [reviews, search, rating, bookMap]);
 
+  const handleSubmitReview = async (values: {
+    reviewerName: string;
+    review: string;
+    rating: number;
+    bookId: number;
+  }) => {
+    const response = await fetch("/api/reviews", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(values),
+    });
+
+    if (!response.ok) {
+      message.error("Failed to submit review.");
+      return;
+    }
+
+    message.success("Review submitted!");
+    form.resetFields();
+    setIsReviewModalOpen(false);
+    window.location.reload();
+  };
+
   return (
     <main style={{ minHeight: "100vh", padding: "48px", background: "#f5efe6" }}>
       <Link href="/">
         <Button icon={<HomeOutlined />}>Back Home</Button>
       </Link>
 
-      <Title style={{ marginTop: "24px" }}>
-        <StarOutlined /> Book Reviews
-      </Title>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginTop: "24px",
+          marginBottom: "8px",
+        }}
+      >
+        <Title style={{ margin: 0 }}>
+          <StarOutlined /> Book Reviews
+        </Title>
+
+        <Button type="primary" onClick={() => setIsReviewModalOpen(true)}>
+          Write a Review
+        </Button>
+      </div>
 
       <Paragraph>Browse reviews by book title, reviewer, rating, and review text.</Paragraph>
 
@@ -113,7 +156,6 @@ export default function ReviewsPage({ reviews, books }: ReviewsPageProps) {
           return (
             <Col xs={24} md={12} lg={8} key={review.id}>
               <Card hoverable style={{ borderRadius: "18px" }}>
-
                 <Title level={4}>{bookTitle}</Title>
 
                 <Text strong>Reviewed by {review.reviewerName}</Text>
@@ -130,6 +172,57 @@ export default function ReviewsPage({ reviews, books }: ReviewsPageProps) {
           );
         })}
       </Row>
+
+      <Modal
+        title="Write a Review"
+        open={isReviewModalOpen}
+        onCancel={() => setIsReviewModalOpen(false)}
+        footer={null}
+      >
+        <Form form={form} layout="vertical" onFinish={handleSubmitReview}>
+          <Form.Item
+            label="Your Name"
+            name="reviewerName"
+            rules={[{ required: true, message: "Please enter your name" }]}
+          >
+            <Input placeholder="Reviewer name" />
+          </Form.Item>
+
+          <Form.Item
+            label="Book"
+            name="bookId"
+            rules={[{ required: true, message: "Please select a book" }]}
+          >
+            <Select
+              placeholder="Select a book"
+              options={books.map((book) => ({
+                value: book.id,
+                label: book.title,
+              }))}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Rating"
+            name="rating"
+            rules={[{ required: true, message: "Please select a rating" }]}
+          >
+            <Rate />
+          </Form.Item>
+
+          <Form.Item
+            label="Review"
+            name="review"
+            rules={[{ required: true, message: "Please write a review" }]}
+          >
+            <Input.TextArea rows={4} placeholder="Write your review..." />
+          </Form.Item>
+
+          <Button type="primary" htmlType="submit" block>
+            Submit Review
+          </Button>
+        </Form>
+      </Modal>
     </main>
   );
 }
