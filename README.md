@@ -49,7 +49,15 @@ npx prisma db seed
 - Step 0, fire up ec2 and mysql rds, set up correctly with their security rules
     > By default, nextjs dev server run on port 3000 of http, so allow it's request
 - Step 1, clone this project to the ec2 and within the project root folder
-  install dependencies
+  install dependencies, you may also need to set up a swapspace area on your ec2 instance to avoid the npm i failing due to running out of ram
+
+```bash
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+```
+
 ```bash
 npm i
 ```
@@ -65,10 +73,37 @@ npm i
   > you have to have an existing DATABSE within mysql. 
   > Tables can be created by prisma
 
+    - Run the command to gain access to mysql cli
+
+    ```bash
+    sudo dnf install mariadb105 -y
+    ```
+
     - Then Run a migration to create your database tables with Prisma Migrate
     ```bash
     npx prisma migrate dev --name init
     ```
+
+    - Run this command to fill database with mock data from sql inserts (make sure you are in the Github Repo) filling in required information with the corresponding values from your RDS instance. After you run the command you will be prompted for your RDS password
+
+    ```bash
+    mysql -h [RDS ENDPOINT] -P 3306 -u [RDS USERNAME] -p [DATABASE NAME FROM ABOVE] < prisma/finalProjectInserts.sql
+    ```
+
+    - You can check if it worked by running the following commands:
+
+    ```bash
+    mysql -h [RDS ENDPOINT] -P 3306 -u [RDS USERNAME] -p [DATABASE NAME FROM ABOVE]
+    ```
+
+    - Run inside the MySQL cli
+
+    ```SQL
+    DESCRIBE Book;
+    SELECT * FROM Book;
+    \q;
+    ```
+
 
     - There might be additional things to do here!
 
