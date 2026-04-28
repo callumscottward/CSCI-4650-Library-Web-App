@@ -68,6 +68,31 @@ export default function BooksPage({ books, authors }: BooksPageProps) {
     });
   }, [books, search, genre, authorMap]);
 
+  const updateCopyStatus = async (
+    type: "physical" | "audio",
+    copyId: number,
+    checkedOut: boolean
+  ) => {
+    const endpoint =
+      type === "physical"
+        ? `/api/physical_books/${copyId}`
+        : `/api/audio_books/${copyId}`;
+
+    const response = await fetch(endpoint, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ checkedOut }),
+    });
+
+    if (!response.ok) {
+      return;
+    }
+
+    window.location.reload();
+  };
+
   return (
     <main style={{ minHeight: "100vh", padding: "48px", background: "#f5efe6" }}>
       <Link href="/">
@@ -138,6 +163,10 @@ export default function BooksPage({ books, authors }: BooksPageProps) {
                 <Text>{authorName}</Text>
                 <br />
                 <Text type="secondary">ISBN: {book.ISBN}</Text>
+                <br />
+                <Text type="secondary">
+                  Pages: {book.pageLength ?? "N/A"}
+                </Text>
 
                 <Paragraph style={{ marginTop: "12px" }}>
                   Click to view availability.
@@ -162,6 +191,10 @@ export default function BooksPage({ books, authors }: BooksPageProps) {
               </Text>
               <br />
               <Text type="secondary">ISBN: {selectedBook.ISBN}</Text>
+              <br />
+              <Text type="secondary">
+                Pages: {selectedBook.pageLength ?? "N/A"}
+              </Text>
             </Paragraph>
 
             <Row gutter={[16, 16]}>
@@ -196,39 +229,61 @@ export default function BooksPage({ books, authors }: BooksPageProps) {
               </Col>
             </Row>
 
-            <Paragraph style={{ marginTop: "16px" }}>
-              <Tag color="green">
-                Physical checked in:{" "}
-                {
-                  selectedBook.physicalBooks.filter((copy) => !copy.checkedOut)
-                    .length
-                }
-              </Tag>
-              <Tag color="red">
-                Physical checked out:{" "}
-                {
-                  selectedBook.physicalBooks.filter((copy) => copy.checkedOut)
-                    .length
-                }
-              </Tag>
-            </Paragraph>
+            <Title level={5} style={{ marginTop: "24px" }}>
+              Physical Copies
+            </Title>
 
-            <Paragraph>
-              <Tag color="green">
-                Audio checked in:{" "}
-                {
-                  selectedBook.audioBooks.filter((copy) => !copy.checkedOut)
-                    .length
-                }
-              </Tag>
-              <Tag color="red">
-                Audio checked out:{" "}
-                {
-                  selectedBook.audioBooks.filter((copy) => copy.checkedOut)
-                    .length
-                }
-              </Tag>
-            </Paragraph>
+            {selectedBook.physicalBooks.map((copy) => (
+              <Card key={copy.id} size="small" style={{ marginBottom: "8px" }}>
+                <Row justify="space-between" align="middle">
+                  <Col>
+                    <Text>
+                      Copy #{copy.id}:{" "}
+                      {copy.checkedOut ? "Checked out" : "Available"}
+                    </Text>
+                  </Col>
+
+                  <Col>
+                    <Button
+                      type={copy.checkedOut ? "default" : "primary"}
+                      onClick={() =>
+                        updateCopyStatus("physical", copy.id, !copy.checkedOut)
+                      }
+                    >
+                      {copy.checkedOut ? "Return" : "Check Out"}
+                    </Button>
+                  </Col>
+                </Row>
+              </Card>
+            ))}
+
+            <Title level={5} style={{ marginTop: "24px" }}>
+              Audio Copies
+            </Title>
+
+            {selectedBook.audioBooks.map((copy) => (
+              <Card key={copy.id} size="small" style={{ marginBottom: "8px" }}>
+                <Row justify="space-between" align="middle">
+                  <Col>
+                    <Text>
+                      Copy #{copy.id}:{" "}
+                      {copy.checkedOut ? "Checked out" : "Available"}
+                    </Text>
+                  </Col>
+
+                  <Col>
+                    <Button
+                      type={copy.checkedOut ? "default" : "primary"}
+                      onClick={() =>
+                        updateCopyStatus("audio", copy.id, !copy.checkedOut)
+                      }
+                    >
+                      {copy.checkedOut ? "Return" : "Check Out"}
+                    </Button>
+                  </Col>
+                </Row>
+              </Card>
+            ))}
           </>
         )}
       </Modal>
